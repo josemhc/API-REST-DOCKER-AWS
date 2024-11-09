@@ -1,4 +1,4 @@
-## Para correr la maquina
+# Para correr la maquina
 
 Levantar la maquina servidorWeb
 
@@ -7,7 +7,7 @@ vagrant up
 vagrant ssh servidorWeb
 ```
 
-## Para correr la aplicacion web
+# Para correr la aplicacion web
 
 ```
 cd /home/vagrant/webapp
@@ -15,10 +15,10 @@ export FLASK_APP=run.py
 /usr/local/bin/flask run --host=0.0.0.0
 ```
 
-## Empaquetar la aplicacion en contenedores docker con https en apache2
+# Empaquetar la aplicacion en contenedores docker con https en apache2
 
 
-# Creacion de autofirmado de SSL
+## Creacion de autofirmado de SSL
 
 ``````
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout localhost.key -out localhost.crt -subj "/C=Col/ST=Valle del cauca/L=Cali/O=UAO/CN=localhost"
@@ -26,7 +26,7 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout localhost.key -out l
 
 NOTA: Mover los archivos de certificado creados (localhost.crt y localhost.key) al mismo directorio en el que se creara el Dockerfile
 
-# Instalacion y configuracion de docker
+## Instalacion y configuracion de docker
 
 ````
 for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
@@ -269,7 +269,7 @@ vagrant@servidorWeb:~$ tree
         └── views.py
 ``````
 
-# Redireccionamiento del puerto 80 (http) al puerto 443 (https)
+## Redireccionamiento del puerto 80 (http) al puerto 443 (https)
 
 Ahora, redireccionaremos puertos de la maquina, especificamente el puerto 80 (http) al puerto 443 (https) el cual esta mapeado al puerto 443 del contenedor docker que corre la aplicacion web con https
 
@@ -340,7 +340,7 @@ docker push new-repo:tagname
 
 # En la segunda maquina virtual llamada Prometheus
 
-# Instalar prometheus
+## Instalar prometheus
 
 ``````
 sudo apt update
@@ -390,7 +390,7 @@ sudo mkdir -p /etc/prometheus/data
 sudo chown -R vagrant:vagrant /etc/prometheus/data
 ``````
 
-# Instalar Node Exporter
+## Instalar Node Exporter
 
 ``````
 wget https://github.com/prometheus/node_exporter/releases/download/v1.6.0/node_exporter-1.6.0.linux-amd64.tar.gz
@@ -425,7 +425,7 @@ Ejecutar prometheus:
 prometheus --config.file=/etc/prometheus/prometheus.yml
 ``````
 
-# Configurar prometheus como un servicio:
+## Configurar prometheus como un servicio:
 
 ``````
 sudo vim /etc/systemd/system/prometheus.service
@@ -460,7 +460,7 @@ Iniciar Node Exporter:
 node_exporter &
 ``````
 
-# Buscar las metricas recolectadas
+## Buscar las metricas recolectadas
 
 En el navegador acceder a http://192.168.60.4:9090/
 
