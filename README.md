@@ -1,4 +1,4 @@
-# Para correr la maquina
+## Para correr la maquina
 
 Levantar la maquina servidorWeb
 
@@ -15,7 +15,10 @@ export FLASK_APP=run.py
 /usr/local/bin/flask run --host=0.0.0.0
 ```
 
-## Creacion de autofirmado de SSL
+## Empaquetar la aplicacion en contenedores docker con https en apache2
+
+
+# Creacion de autofirmado de SSL
 
 ``````
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout localhost.key -out localhost.crt -subj "/C=Col/ST=Valle del cauca/L=Cali/O=UAO/CN=localhost"
@@ -23,7 +26,7 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout localhost.key -out l
 
 NOTA: Mover los archivos de certificado creados (localhost.crt y localhost.key) al mismo directorio en el que se creara el Dockerfile
 
-## Instalacion y configuracion de docker
+# Instalacion y configuracion de docker
 
 ````
 for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
@@ -266,7 +269,7 @@ vagrant@servidorWeb:~$ tree
         └── views.py
 ``````
 
-# redireccionamiento del puerto 80 (http) al puerto 443 (https)
+# Redireccionamiento del puerto 80 (http) al puerto 443 (https)
 
 Ahora, redireccionaremos puertos de la maquina, especificamente el puerto 80 (http) al puerto 443 (https) el cual esta mapeado al puerto 443 del contenedor docker que corre la aplicacion web con https
 
