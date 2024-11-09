@@ -11,4 +11,9 @@ Vagrant.configure("2") do |config|
     servidorWeb.vm.provision "shell", path: "script.sh"
     servidorWeb.vm.hostname = "servidorWeb"
   end
+  config.vm.define :prometheus do |prometheus|
+    prometheus.vm.box = "bento/ubuntu-22.04"
+    prometheus.vm.network :private_network, ip: "192.168.60.4"
+    prometheus.vm.hostname = "prometheus"
+  end
 end

@@ -15,6 +15,14 @@ export FLASK_APP=run.py
 /usr/local/bin/flask run --host=0.0.0.0
 ```
 
+## Creacion de autofirmado de SSL
+
+``````
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout localhost.key -out localhost.crt -subj "/C=Col/ST=Valle del cauca/L=Cali/O=UAO/CN=localhost"
+``````
+
+NOTA: Mover los archivos de certificado creados (localhost.crt y localhost.key) al mismo directorio en el que se creara el Dockerfile
+
 ## Instalacion y configuracion de docker
 
 ````
@@ -81,19 +89,10 @@ sudo touch Dockerfile
 sudo touch docker-compose
 ``````
 
-
-## Creacion de autofirmado de SSL
-
-``````
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout localhost.key -out localhost.crt -subj "/C=Col/ST=Valle del cauca/L=Cali/O=UAO/CN=localhost"
-``````
-
-NOTA: Mover los archivos de certificado creados (localhost.crt y localhost.key) al mismo directorio del Dockerfile
-
 Crear archivo de configuracion de host virtual en el mismo directorio del Dockerfile llamado "my-httpd-vhosts.conf"
 
 ``````
-my-httpd-vhosts.conf
+sudo vim my-httpd-vhosts.conf
 ``````
 Debe contener lo siguiente
 
@@ -186,7 +185,7 @@ services:
       dockerfile: Dockerfile
     container_name: webapp_container
     ports:
-      - "8443:443"
+      - "443:443"
     depends_on:
       - db
     environment:
@@ -267,6 +266,41 @@ vagrant@servidorWeb:~$ tree
         └── views.py
 ``````
 
+# redireccionamiento del puerto 80 (http) al puerto 443(https)
+
+Ahora, redireccionaremos puertos de la maquina, especificamente el puerto 80 (http) al puerto 443(https) el cual esta mapeado al puerto 443 del contenedor docker que corre la aplicacion web con https
+
+Instalar apache:
+
+``````
+sudo apt update
+sudo apt install apache2
+cd /etc/apache2/sites-availables
+``````
+
+Ahora editar el archivo 000-default.conf
+
+``````
+sudo vim 000-default.conf
+``````
+
+Este archivo debe tener lo siguiente:
+
+``````
+<VirtualHost *:80>
+    # Sin ServerName, se usará la IP
+    Redirect permanent / https://192.168.60.3:443/
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+``````
+
+Reiniciar apache2
+
+``````
+sudo systemctl restart apache2
+``````
+
 Construir imagen a partir del Dockerfile:
 
 ``````
@@ -277,6 +311,7 @@ Levantar los contenedores de los servicios descritos en el docker-compose.yml:
 ``````
 docker compose up
 ``````
+
 Para ver la imagen construida:
 
 ``````
@@ -299,3 +334,145 @@ Intercambiar tag local-image con el nombre de la imagen que se construyo con el 
 docker tag local-image:tagname new-repo:tagname
 docker push new-repo:tagname
 ``````
+
+# En la segunda maquina virtual llamada Prometheus
+
+# Instalar prometheus
+
+``````
+sudo apt update
+wget https://github.com/prometheus/prometheus/releases/download/v2.46.0/prometheus-2.46.0.linux-amd64.tar.gz
+``````
+
+Extraer el archivo
+
+``````
+tar xvf prometheus-2.46.0.linux-amd64.tar.gz
+``````
+
+Mover los binarios:
+
+``````
+sudo mv prometheus-2.46.0.linux-amd64/prometheus /usr/local/bin/
+sudo mv prometheus-2.46.0.linux-amd64/promtool /usr/local/bin/
+``````
+
+Crear el archivo de configuracion:
+
+``````
+sudo mkdir -p /etc/prometheus
+sudo cp prometheus-2.46.0.linux-amd64/prometheus.yml /etc/prometheus/
+``````
+
+configurar archivo prometheus.yml
+
+``````
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['localhost:9100']
+``````
+
+Crear directorio de datos:
+
+``````
+sudo mkdir -p /etc/prometheus/data
+sudo chown -R vagrant:vagrant /etc/prometheus/data
+``````
+
+# Instalar Node Exporter
+
+``````
+wget https://github.com/prometheus/node_exporter/releases/download/v1.6.0/node_exporter-1.6.0.linux-amd64.tar.gz
+``````
+Extraer el archivo:
+
+``````
+tar xvf node_exporter-1.6.0.linux-amd64.tar.gz
+``````
+
+Mover el binario:
+
+``````
+sudo mv node_exporter-1.6.0.linux-amd64/node_exporter /usr/local/bin/
+``````
+
+Deshabilitar el recolector powersupplyclass
+
+``````
+/usr/local/bin/node_exporter --no-collector.powersupplyclass &
+``````
+
+Reiniciar prometheus:
+
+``````
+sudo systemctl restart prometheus
+``````
+
+Ejecutar prometheus:
+
+``````
+prometheus --config.file=/etc/prometheus/prometheus.yml
+``````
+
+# Configurar prometheus como un servicio:
+
+``````
+sudo vim /etc/systemd/system/prometheus.service
+``````
+
+Este archivo debe tener lo siguiente:
+
+``````
+[Unit]
+Description=Prometheus Monitoring
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=vagrant
+ExecStart=/usr/local/bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/etc/prometheus/data
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+``````
+
+Reiniciar prometheus como servicio:
+
+``````
+sudo systemctl restart prometheus
+``````
+
+Iniciar Node Exporter:
+
+``````
+node_exporter &
+``````
+
+# Buscar las metricas recolectadas
+
+En el navegador acceder a http://192.168.60.4:9090/
+
+Buscar cada metrica por nombre en la interfaz en la seccion Graph
+
+Metricas:
+
+- node_cpu_seconds_total (node_cpu_seconds_total)
+
+Muestra el tiempo que la CPU ha pasado en diferentes estados, útil para analizar el uso de CPU.
+
+- Available Memory (node_memory_MemAvailable_bytes)
+
+Muestra la cantidad de memoria disponible en el sistema, útil para detectar problemas de memoria.
+
+- Disk Space (node_filesystem_avail_bytes):
+
+Informa sobre el espacio de almacenamiento disponible, importante para monitorear el almacenamiento y prevenir fallos.
