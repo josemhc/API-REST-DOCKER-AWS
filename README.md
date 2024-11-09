@@ -266,9 +266,9 @@ vagrant@servidorWeb:~$ tree
         └── views.py
 ``````
 
-# redireccionamiento del puerto 80 (http) al puerto 443(https)
+# redireccionamiento del puerto 80 (http) al puerto 443 (https)
 
-Ahora, redireccionaremos puertos de la maquina, especificamente el puerto 80 (http) al puerto 443(https) el cual esta mapeado al puerto 443 del contenedor docker que corre la aplicacion web con https
+Ahora, redireccionaremos puertos de la maquina, especificamente el puerto 80 (http) al puerto 443 (https) el cual esta mapeado al puerto 443 del contenedor docker que corre la aplicacion web con https
 
 Instalar apache:
 
